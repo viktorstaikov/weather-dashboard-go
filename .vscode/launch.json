@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch test function",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/services/weather_test.go",
+      "args": ["-test.run", "TestGetForecast"]
+    },
+    {
       "name": "Launch",
       "type": "go",
       "request": "launch",

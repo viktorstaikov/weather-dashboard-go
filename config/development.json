@@ -1,4 +1,9 @@
 {
 	"port": ":5000",
-	"openWeatherAppId": "d5a332c2fd770645632f720a59006d58"
+	"openWeather": {
+		"baseUrl": "http://api.openweathermap.org",
+		"forecastEndpoint": "/data/2.5/forecast",
+		"uvEndpoint": "/data/2.5/uvi/forecast",
+		"appId": "d5a332c2fd770645632f720a59006d58"
+	}
 }

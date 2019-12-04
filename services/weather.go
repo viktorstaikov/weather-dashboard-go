@@ -11,7 +11,7 @@ import (
 
 // GetTempSeries returns data series for min and max temperature
 func GetTempSeries() (*[]TempData, error) {
-	forecast, err := getForecast()
+	forecast, err := MakeForecastRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +24,14 @@ func GetTempSeries() (*[]TempData, error) {
 	return &mapped, nil
 }
 
-func getForecast() (*forecastResponse, error) {
+// MakeForecastRequest is exported for testing only
+func MakeForecastRequest() (*forecastResponse, error) {
 	config := config.GetConfig()
-	appID := config.GetString("openWeatherAppId")
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?lat=42.6979&lon=23.3222&appid=%s&units=metric", appID)
+	appID := config.GetString("openWeather.appId")
+	baseURL := config.GetString("openWeather.baseUrl")
+	endpoint := config.GetString("openWeather.forecastEndpoint")
+
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", baseURL, endpoint, appID)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
