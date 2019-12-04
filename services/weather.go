@@ -10,8 +10,21 @@ import (
 )
 
 // GetTempSeries returns data series for min and max temperature
-func GetTempSeries() ([]TempData, error) {
+func GetTempSeries() (*[]TempData, error) {
+	forecast, err := getForecast()
+	if err != nil {
+		return nil, err
+	}
+	meta := forecast.toMetaForecast()
+	var mapped []TempData
+	for _, item := range meta {
+		entry := item.toTempData()
+		mapped = append(mapped, entry)
+	}
+	return &mapped, nil
+}
 
+func getForecast() (*forecastResponse, error) {
 	config := config.GetConfig()
 	appID := config.GetString("openWeatherAppId")
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?lat=42.6979&lon=23.3222&appid=%s&units=metric", appID)
@@ -26,11 +39,5 @@ func GetTempSeries() ([]TempData, error) {
 	var forecast forecastResponse
 	json.Unmarshal(bytes, &forecast)
 
-	meta := forecast.toMetaForecast()
-	var mapped []TempData
-	for _, item := range meta {
-		entry := item.toTempData()
-		mapped = append(mapped, entry)
-	}
-	return mapped, nil
+	return &forecast, nil
 }
