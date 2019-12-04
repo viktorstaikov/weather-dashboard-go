@@ -46,9 +46,9 @@ func TestGetForecast(t *testing.T) {
 
 	c.Set("openWeather.baseUrl", ts.URL)
 
-	_, err := MakeForecastRequest()
+	_, err := makeForecastRequest()
 	if err != nil {
-		t.Errorf("MakeForecastRequest() returned an error: %s", err)
+		t.Errorf("makeForecastRequest() returned an error: %s", err)
 	}
 
 }

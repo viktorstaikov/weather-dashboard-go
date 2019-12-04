@@ -11,7 +11,7 @@ import (
 
 // GetTempSeries returns data series for min and max temperature
 func GetTempSeries() (*[]TempData, error) {
-	forecast, err := MakeForecastRequest()
+	forecast, err := makeForecastRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,7 @@ func GetTempSeries() (*[]TempData, error) {
 	return &mapped, nil
 }
 
-// MakeForecastRequest is exported for testing only
-func MakeForecastRequest() (*forecastResponse, error) {
+func makeForecastRequest() (*forecastResponse, error) {
 	config := config.GetConfig()
 	appID := config.GetString("openWeather.appId")
 	baseURL := config.GetString("openWeather.baseUrl")
