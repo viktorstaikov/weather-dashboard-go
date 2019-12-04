@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/viktorstaikov/weather-dashboard-go/services"
 )
 
 // WeatherController ...
@@ -11,7 +12,14 @@ type WeatherController struct{}
 
 // TempSeries ...
 func (h WeatherController) TempSeries(c *gin.Context) {
-	c.String(http.StatusOK, "Temp series")
+	resp, err := services.GetTempSeries()
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get Temprature series", "error": err.Error()})
+		c.Abort()
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+
 }
 
 // RainSeries ...
