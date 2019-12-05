@@ -16,6 +16,7 @@ func Init(env string) {
 	config = viper.New()
 	config.SetConfigType("json")
 	config.SetConfigName(env)
+	config.AddConfigPath("../../config/")
 	config.AddConfigPath("../config/")
 	config.AddConfigPath("config/")
 	err = config.ReadInConfig()
@@ -31,6 +32,7 @@ func relativePath(basedir string, path *string) {
 	}
 }
 
+// GetConfig ...
 func GetConfig() *viper.Viper {
 	return config
 }

@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (92.3%)</option>
+				
+				<option value="file1">github.com/viktorstaikov/weather-dashboard-go/services/weather.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package openweatherapi
+
+import (
+        "encoding/json"
+        "fmt"
+        "io/ioutil"
+        "net/http"
+
+        "github.com/viktorstaikov/weather-dashboard-go/config"
+)
+
+type ForecastResponse struct {
+        List []struct {
+                Dt   uint `json:"dt"`
+                Main struct {
+                        Temp      float64 `json:"temp"`
+                        TempMin   float64 `json:"temp_min"`
+                        TempMax   float64 `json:"temp_max"`
+                        Pressure  int     `json:"pressure"`
+                        SeaLevel  int     `json:"sea_level"`
+                        GrndLevel int     `json:"grnd_level"`
+                        Humidity  int     `json:"humidity"`
+                        TempKf    float64 `json:"temp_kf"`
+                } `json:"main"`
+                Weather []struct {
+                        ID          int    `json:"id"`
+                        Main        string `json:"main"`
+                        Description string `json:"description"`
+                        Icon        string `json:"icon"`
+                } `json:"weather"`
+                Clouds struct {
+                        All int `json:"all"`
+                } `json:"clouds"`
+                Wind struct {
+                        Speed float64 `json:"speed"`
+                        Deg   int     `json:"deg"`
+                } `json:"wind"`
+                Rain struct {
+                        ThreeH float64 `json:"3h"`
+                } `json:"rain"`
+                Snow struct {
+                        ThreeH float64 `json:"3h"`
+                } `json:"snow"`
+                Sys struct {
+                        Pod string `json:"pod"`
+                } `json:"sys"`
+                DtTxt string `json:"dt_txt"`
+        } `json:"list"`
+}
+
+// MakeForecastRequest ...
+func MakeForecastRequest() (*ForecastResponse, error) <span class="cov8" title="1">{
+        config := config.GetConfig()
+        appID := config.GetString("openWeather.appId")
+        baseURL := config.GetString("openWeather.baseUrl")
+        endpoint := config.GetString("openWeather.forecastEndpoint")
+
+        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s&amp;units=metric", baseURL, endpoint, appID)
+        resp, err := http.Get(url)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        bytes, _ := ioutil.ReadAll(resp.Body)
+
+        var forecast ForecastResponse
+        json.Unmarshal(bytes, &amp;forecast)
+
+        return &amp;forecast, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package services
+
+import (
+        "github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi"
+)
+
+// MetaForecast ...
+type MetaForecast struct {
+        Timestamp uint    `json:"timestamp"`
+        Temp      float64 `json:"temp"`
+        TempMin   float64 `json:"temp_min"`
+        TempMax   float64 `json:"temp_max"`
+        Pressure  int     `json:"pressure"`
+        Humidity  int     `json:"humidity"`
+        Weather   struct {
+                ID          int    `json:"id"`
+                Main        string `json:"main"`
+                Description string `json:"description"`
+                Icon        string `json:"icon"`
+        } `json:"weather"`
+        Clouds int `json:"clouds"`
+        Wind   struct {
+                Speed float64 `json:"speed"`
+                Deg   int     `json:"deg"`
+        } `json:"wind"`
+        Rain    float64 `json:"rain"`
+        Snow    float64 `json:"snow"`
+        UVIndex float64 `json:"uvindex"`
+}
+
+// ParseForecastResponse ...
+func ParseForecastResponse(r *openweatherapi.ForecastResponse) []MetaForecast <span class="cov0" title="0">{
+        var list []MetaForecast
+        for _, item := range r.List </span><span class="cov0" title="0">{
+                var metaItem MetaForecast
+                metaItem.Timestamp = item.Dt * 1000
+                metaItem.Temp = item.Main.Temp
+                metaItem.TempMin = item.Main.TempMin
+                metaItem.TempMax = item.Main.TempMax
+                metaItem.Pressure = item.Main.Pressure
+                metaItem.Humidity = item.Main.Humidity
+                metaItem.Weather = item.Weather[0]
+                metaItem.Wind = item.Wind
+
+                metaItem.Clouds = 0
+                if item.Clouds.All &gt; 0 </span><span class="cov0" title="0">{
+                        metaItem.Clouds = item.Clouds.All
+                }</span>
+
+                <span class="cov0" title="0">metaItem.Rain = 0
+                if item.Rain.ThreeH &gt; 0 </span><span class="cov0" title="0">{
+                        metaItem.Rain = item.Rain.ThreeH
+                }</span>
+
+                <span class="cov0" title="0">metaItem.Snow = 0
+                if item.Snow.ThreeH &gt; 0 </span><span class="cov0" title="0">{
+                        metaItem.Snow = item.Snow.ThreeH
+                }</span>
+
+                <span class="cov0" title="0">list = append(list, metaItem)</span>
+        }
+        <span class="cov0" title="0">return list</span>
+}
+
+// TempData represents temperature forecast at given time
+type TempData struct {
+        Timestamp uint    `json:"timestamp"`
+        TempMin   float64 `json:"temp_min"`
+        TempMax   float64 `json:"temp_max"`
+}
+
+// ToTempData ...
+func (m MetaForecast) ToTempData() TempData <span class="cov0" title="0">{
+        var item TempData
+        item.TempMax = m.TempMax
+        item.TempMin = m.TempMin
+        item.Timestamp = m.Timestamp
+        return item
+}</span>
+
+// GetTempSeries returns data series for min and max temperature
+func GetTempSeries() (*[]TempData, error) <span class="cov0" title="0">{
+        forecast, err := openweatherapi.MakeForecastRequest()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">meta := ParseForecastResponse(forecast)
+        var mapped []TempData
+        for _, item := range meta </span><span class="cov0" title="0">{
+                entry := item.ToTempData()
+                mapped = append(mapped, entry)
+        }</span>
+        <span class="cov0" title="0">return &amp;mapped, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
