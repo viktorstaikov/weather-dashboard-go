@@ -40,20 +40,24 @@ func (h WeatherController) TempSeries(c *gin.Context) {
 
 // RainSeries ...
 func (h WeatherController) RainSeries(c *gin.Context) {
-	c.String(http.StatusOK, "Rain series")
+	// c.String(http.StatusOK, "Rain series")
+	c.AbortWithStatus(http.StatusNotImplemented)
 }
 
 // PressureSeries ...
 func (h WeatherController) PressureSeries(c *gin.Context) {
-	c.String(http.StatusOK, "Pressure series")
+	// c.String(http.StatusOK, "Pressure series")
+	c.AbortWithStatus(http.StatusNotImplemented)
 }
 
 // HumiditySeries ...
 func (h WeatherController) HumiditySeries(c *gin.Context) {
-	c.String(http.StatusOK, "Humidity series")
+	// c.String(http.StatusOK, "Humidity series")
+	c.AbortWithStatus(http.StatusNotImplemented)
 }
 
 // Forecast ...
 func (h WeatherController) Forecast(c *gin.Context) {
-	c.String(http.StatusOK, "Forecast")
+	// c.String(http.StatusOK, "Forecast")
+	c.AbortWithStatus(http.StatusNotImplemented)
 }
