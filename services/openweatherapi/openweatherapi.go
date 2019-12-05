@@ -7,8 +7,17 @@ import (
 	"net/http"
 
 	"github.com/viktorstaikov/weather-dashboard-go/config"
+	"github.com/viktorstaikov/weather-dashboard-go/services"
 )
 
+// OpenWeatherAPI ...
+type OpenWeatherAPI struct {
+	appID            string
+	baseURL          string
+	forecastEndpoint string
+}
+
+// ForecastResponse ...
 type ForecastResponse struct {
 	List []struct {
 		Dt   uint `json:"dt"`
@@ -48,14 +57,43 @@ type ForecastResponse struct {
 	} `json:"list"`
 }
 
-// MakeForecastRequest ...
-func MakeForecastRequest() (*ForecastResponse, error) {
-	config := config.GetConfig()
-	appID := config.GetString("openWeather.appId")
-	baseURL := config.GetString("openWeather.baseUrl")
-	endpoint := config.GetString("openWeather.forecastEndpoint")
+// parseForecastResponse ...
+func parseForecastResponse(r *ForecastResponse) []services.MetaForecast {
+	var list []services.MetaForecast
+	for _, item := range r.List {
+		var metaItem services.MetaForecast
+		metaItem.Timestamp = item.Dt * 1000
+		metaItem.Temp = item.Main.Temp
+		metaItem.TempMin = item.Main.TempMin
+		metaItem.TempMax = item.Main.TempMax
+		metaItem.Pressure = item.Main.Pressure
+		metaItem.Humidity = item.Main.Humidity
+		metaItem.Weather = item.Weather[0]
+		metaItem.Wind = item.Wind
 
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", baseURL, endpoint, appID)
+		metaItem.Clouds = 0
+		if item.Clouds.All >= 0 {
+			metaItem.Clouds = item.Clouds.All
+		}
+
+		metaItem.Rain = 0
+		if item.Rain.ThreeH >= 0 {
+			metaItem.Rain = item.Rain.ThreeH
+		}
+
+		metaItem.Snow = 0
+		if item.Snow.ThreeH >= 0 {
+			metaItem.Snow = item.Snow.ThreeH
+		}
+
+		list = append(list, metaItem)
+	}
+	return list
+}
+
+// MakeForecastRequest ...
+func (api *OpenWeatherAPI) MakeForecastRequest() ([]services.MetaForecast, error) {
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.forecastEndpoint, api.appID)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -67,5 +105,20 @@ func MakeForecastRequest() (*ForecastResponse, error) {
 	var forecast ForecastResponse
 	json.Unmarshal(bytes, &forecast)
 
-	return &forecast, nil
+	meta := parseForecastResponse(&forecast)
+	return meta, nil
+}
+
+// MakeOpenWeatherAPI ...
+func MakeOpenWeatherAPI() *OpenWeatherAPI {
+	config.Init("development")
+	c := config.GetConfig()
+
+	api := new(OpenWeatherAPI)
+
+	api.appID = c.GetString("openWeather.appId")
+	api.baseURL = c.GetString("openWeather.baseUrl")
+	api.forecastEndpoint = c.GetString("openWeather.forecastEndpoint")
+
+	return api
 }

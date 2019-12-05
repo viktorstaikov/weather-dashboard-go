@@ -5,14 +5,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/viktorstaikov/weather-dashboard-go/services"
+	"github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi"
 )
 
 // WeatherController ...
-type WeatherController struct{}
+type WeatherController struct {
+	weatherService *services.WeatherService
+}
+
+var ws *services.WeatherService
+
+// MakeWeatherController ...
+func MakeWeatherController() *WeatherController {
+	c := new(WeatherController)
+
+	api := openweatherapi.MakeOpenWeatherAPI()
+	c.weatherService = services.MakeWeatherService(api)
+
+	return c
+}
 
 // TempSeries ...
 func (h WeatherController) TempSeries(c *gin.Context) {
-	resp, err := services.GetTempSeries()
+	resp, err := h.weatherService.GetTempSeries()
+
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get Temprature series", "error": err.Error()})
 		c.Abort()

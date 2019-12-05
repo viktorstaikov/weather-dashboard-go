@@ -11,7 +11,7 @@ func RootRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(static.Serve("/", static.LocalFile("./client/build", true)))
 
-	controller := new(controllers.WeatherController)
+	controller := controllers.MakeWeatherController()
 
 	api := router.Group("/api")
 	{

@@ -1,6 +1,7 @@
 package openweatherapi
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,17 @@ import (
 
 	"github.com/viktorstaikov/weather-dashboard-go/config"
 )
+
+func TestParseForecastResponse(t *testing.T) {
+	jsonString := `{"list":[{"dt":1575579600,"main":{"temp":-1,"temp_min":-3,"temp_max":0,"pressure":1031,"sea_level":1031,"grnd_level":913,"humidity":89,"temp_kf":1.58},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.39,"deg":233},"rain":{"3h":0},"snow":{"3h":0},"sys":{"pod":"n"},"dt_txt":"2019-12-05 21:00:00"},{"dt":1575590400,"main":{"temp":3,"temp_min":1,"temp_max":5,"pressure":1030,"sea_level":1030,"grnd_level":913,"humidity":89,"temp_kf":1.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.07,"deg":234},"rain":{"3h":20},"snow":{"3h":10},"sys":{"pod":"n"},"dt_txt":"2019-12-06 00:00:00"}]}`
+
+	var forecast ForecastResponse
+	json.Unmarshal([]byte(jsonString), &forecast)
+
+	metaForecastSlice := parseForecastResponse(&forecast)
+
+	assert.Equal(t, 2, len(metaForecastSlice))
+}
 
 func TestMakeForecastRequest(t *testing.T) {
 	config.Init("development")
@@ -42,7 +54,9 @@ func TestMakeForecastRequest(t *testing.T) {
 
 	c.Set("openWeather.baseUrl", ts.URL)
 
-	_, err := MakeForecastRequest()
+	api := MakeOpenWeatherAPI()
+
+	_, err := api.MakeForecastRequest()
 	if err != nil {
 		t.Errorf("MakeForecastRequest() returned an error: %s", err)
 	}
