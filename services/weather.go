@@ -6,8 +6,12 @@ import (
 
 // WeatherAPI ...
 type WeatherAPI interface {
-	MakeForecastRequest() ([]MetaForecast, error)
 	GetForecast(*time.Time) (*MetaForecast, error)
+
+	GetTempSeries() ([]TempData, error)
+	GetRainSeries() ([]StatsData, error)
+	GetPressureSeries() ([]StatsData, error)
+	GetHumiditySeries() ([]StatsData, error)
 }
 
 // WeatherService ...
@@ -77,73 +81,42 @@ func (m MetaForecast) ToTempData() TempData {
 
 // GetTempSeries returns data series for min and max temperature
 func (w *WeatherService) GetTempSeries() ([]TempData, error) {
-
-	meta, err := w.api.MakeForecastRequest()
+	data, err := w.api.GetTempSeries()
 
 	if err != nil {
 		return nil, err
 	}
-
-	var mapped []TempData
-	for _, item := range meta {
-		entry := item.ToTempData()
-		mapped = append(mapped, entry)
-	}
-	return mapped, nil
+	return data, nil
 }
 
 // GetRainSeries ...
 func (w *WeatherService) GetRainSeries() ([]StatsData, error) {
-	meta, err := w.api.MakeForecastRequest()
+	data, err := w.api.GetRainSeries()
 
 	if err != nil {
 		return nil, err
 	}
-
-	var mapped []StatsData
-	for _, item := range meta {
-		var entry StatsData
-		entry.Timestamp = item.Timestamp
-		entry.Value = item.Rain
-		mapped = append(mapped, entry)
-	}
-	return mapped, nil
+	return data, nil
 }
 
 // GetPressureSeries ...
 func (w *WeatherService) GetPressureSeries() ([]StatsData, error) {
-	meta, err := w.api.MakeForecastRequest()
+	data, err := w.api.GetPressureSeries()
 
 	if err != nil {
 		return nil, err
 	}
-
-	var mapped []StatsData
-	for _, item := range meta {
-		var entry StatsData
-		entry.Timestamp = item.Timestamp
-		entry.Value = float64(item.Pressure)
-		mapped = append(mapped, entry)
-	}
-	return mapped, nil
+	return data, nil
 }
 
 // GetHumiditySeries ...
 func (w *WeatherService) GetHumiditySeries() ([]StatsData, error) {
-	meta, err := w.api.MakeForecastRequest()
+	data, err := w.api.GetHumiditySeries()
 
 	if err != nil {
 		return nil, err
 	}
-
-	var mapped []StatsData
-	for _, item := range meta {
-		var entry StatsData
-		entry.Timestamp = item.Timestamp
-		entry.Value = float64(item.Humidity)
-		mapped = append(mapped, entry)
-	}
-	return mapped, nil
+	return data, nil
 }
 
 // GetForecast returns full forecast for given day

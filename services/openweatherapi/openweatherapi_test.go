@@ -22,7 +22,7 @@ func TestParseForecastResponse(t *testing.T) {
 	assert.Equal(t, 2, len(metaForecastSlice))
 }
 
-func TestMakeForecastRequest(t *testing.T) {
+func TestmakeForecastRequest(t *testing.T) {
 	config.Init("development")
 	c := config.GetConfig()
 
@@ -56,9 +56,9 @@ func TestMakeForecastRequest(t *testing.T) {
 
 	api := MakeOpenWeatherAPI()
 
-	_, err := api.MakeForecastRequest()
+	_, err := api.makeForecastRequest()
 	if err != nil {
-		t.Errorf("MakeForecastRequest() returned an error: %s", err)
+		t.Errorf("makeForecastRequest() returned an error: %s", err)
 	}
 
 }

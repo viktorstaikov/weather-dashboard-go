@@ -113,7 +113,7 @@ func parseUVResponse(r []UVResponse) []services.MetaForecast {
 	return list
 }
 
-// MakeOpenWeatherAPI ...
+// MakeOpenWeatherAPI init
 func MakeOpenWeatherAPI() *OpenWeatherAPI {
 	config.Init("development")
 	c := config.GetConfig()
@@ -128,51 +128,85 @@ func MakeOpenWeatherAPI() *OpenWeatherAPI {
 	return api
 }
 
-// MakeForecastRequest ...
-func (api *OpenWeatherAPI) MakeForecastRequest() ([]services.MetaForecast, error) {
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.forecastEndpoint, api.appID)
-	resp, err := http.Get(url)
+// GetTempSeries from OpenWeatherAPI
+func (api *OpenWeatherAPI) GetTempSeries() ([]services.TempData, error) {
+	meta, err := api.makeForecastRequest()
+
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	bytes, _ := ioutil.ReadAll(resp.Body)
-
-	var forecast ForecastResponse
-	json.Unmarshal(bytes, &forecast)
-
-	meta := parseForecastResponse(&forecast)
-	return meta, nil
+	var mapped []services.TempData
+	for _, item := range meta {
+		entry := item.ToTempData()
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
 }
 
-// MakeUVIndexRequest ...
-func (api *OpenWeatherAPI) MakeUVIndexRequest() ([]services.MetaForecast, error) {
+// GetRainSeries from OpenWeatherAPI
+func (api *OpenWeatherAPI) GetRainSeries() ([]services.StatsData, error) {
+	meta, err := api.makeForecastRequest()
 
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.uvEndpoint, api.appID)
-	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	bytes, _ := ioutil.ReadAll(resp.Body)
-
-	var forecast []UVResponse
-	json.Unmarshal(bytes, &forecast)
-
-	meta := parseUVResponse(forecast)
-	return meta, nil
+	var mapped []services.StatsData
+	for _, item := range meta {
+		var entry services.StatsData
+		entry.Timestamp = item.Timestamp
+		entry.Value = item.Rain
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
 }
 
-// GetForecast ...
+// GetPressureSeries from OpenWeatherAPI
+func (api *OpenWeatherAPI) GetPressureSeries() ([]services.StatsData, error) {
+	meta, err := api.makeForecastRequest()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var mapped []services.StatsData
+	for _, item := range meta {
+		var entry services.StatsData
+		entry.Timestamp = item.Timestamp
+		entry.Value = float64(item.Pressure)
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
+}
+
+// GetHumiditySeries from OpenWeatherAPI
+func (api *OpenWeatherAPI) GetHumiditySeries() ([]services.StatsData, error) {
+	meta, err := api.makeForecastRequest()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var mapped []services.StatsData
+	for _, item := range meta {
+		entry := services.StatsData{
+			Timestamp: item.Timestamp,
+			Value:     float64(item.Humidity),
+		}
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
+}
+
+// GetForecast from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast, error) {
-	data, err := api.MakeForecastRequest()
+	data, err := api.makeForecastRequest()
 	if err != nil {
 		return nil, err
 	}
 
-	uvData, uvErr := api.MakeUVIndexRequest()
+	uvData, uvErr := api.makeUVIndexRequest()
 	if uvErr != nil {
 		return nil, err
 	}
@@ -205,6 +239,41 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
 		UVIndex:   avgUvData.UVIndex,
 	}
 	return res, nil
+}
+
+func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error) {
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.forecastEndpoint, api.appID)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bytes, _ := ioutil.ReadAll(resp.Body)
+
+	var forecast ForecastResponse
+	json.Unmarshal(bytes, &forecast)
+
+	meta := parseForecastResponse(&forecast)
+	return meta, nil
+}
+
+func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) {
+
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.uvEndpoint, api.appID)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bytes, _ := ioutil.ReadAll(resp.Body)
+
+	var forecast []UVResponse
+	json.Unmarshal(bytes, &forecast)
+
+	meta := parseUVResponse(forecast)
+	return meta, nil
 }
 
 func averageForecast(arr []services.MetaForecast) *services.MetaForecast {
