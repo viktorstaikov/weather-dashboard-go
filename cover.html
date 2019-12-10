@@ -54,9 +54,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (97.4%)</option>
-				
-				<option value="file1">github.com/viktorstaikov/weather-dashboard-go/services/weather.go (94.1%)</option>
+				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/weather.go (31.9%)</option>
 				
 				</select>
 			</div>
@@ -70,137 +68,12 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package openweatherapi
+		<pre class="file" id="file0" style="display: none">package services
 
 import (
-        "encoding/json"
-        "fmt"
-        "io/ioutil"
-        "net/http"
+        "time"
 
-        "github.com/viktorstaikov/weather-dashboard-go/config"
-        "github.com/viktorstaikov/weather-dashboard-go/services"
-)
-
-// OpenWeatherAPI ...
-type OpenWeatherAPI struct {
-        appID            string
-        baseURL          string
-        forecastEndpoint string
-}
-
-// ForecastResponse ...
-type ForecastResponse struct {
-        List []struct {
-                Dt   uint `json:"dt"`
-                Main struct {
-                        Temp      float64 `json:"temp"`
-                        TempMin   float64 `json:"temp_min"`
-                        TempMax   float64 `json:"temp_max"`
-                        Pressure  int     `json:"pressure"`
-                        SeaLevel  int     `json:"sea_level"`
-                        GrndLevel int     `json:"grnd_level"`
-                        Humidity  int     `json:"humidity"`
-                        TempKf    float64 `json:"temp_kf"`
-                } `json:"main"`
-                Weather []struct {
-                        ID          int    `json:"id"`
-                        Main        string `json:"main"`
-                        Description string `json:"description"`
-                        Icon        string `json:"icon"`
-                } `json:"weather"`
-                Clouds struct {
-                        All int `json:"all"`
-                } `json:"clouds"`
-                Wind struct {
-                        Speed float64 `json:"speed"`
-                        Deg   int     `json:"deg"`
-                } `json:"wind"`
-                Rain struct {
-                        ThreeH float64 `json:"3h"`
-                } `json:"rain"`
-                Snow struct {
-                        ThreeH float64 `json:"3h"`
-                } `json:"snow"`
-                Sys struct {
-                        Pod string `json:"pod"`
-                } `json:"sys"`
-                DtTxt string `json:"dt_txt"`
-        } `json:"list"`
-}
-
-// parseForecastResponse ...
-func parseForecastResponse(r *ForecastResponse) []services.MetaForecast <span class="cov8" title="1">{
-        var list []services.MetaForecast
-        for _, item := range r.List </span><span class="cov8" title="1">{
-                var metaItem services.MetaForecast
-                metaItem.Timestamp = item.Dt * 1000
-                metaItem.Temp = item.Main.Temp
-                metaItem.TempMin = item.Main.TempMin
-                metaItem.TempMax = item.Main.TempMax
-                metaItem.Pressure = item.Main.Pressure
-                metaItem.Humidity = item.Main.Humidity
-                metaItem.Weather = item.Weather[0]
-                metaItem.Wind = item.Wind
-
-                metaItem.Clouds = 0
-                if item.Clouds.All &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Clouds = item.Clouds.All
-                }</span>
-
-                <span class="cov8" title="1">metaItem.Rain = 0
-                if item.Rain.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Rain = item.Rain.ThreeH
-                }</span>
-
-                <span class="cov8" title="1">metaItem.Snow = 0
-                if item.Snow.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Snow = item.Snow.ThreeH
-                }</span>
-
-                <span class="cov8" title="1">list = append(list, metaItem)</span>
-        }
-        <span class="cov8" title="1">return list</span>
-}
-
-// MakeForecastRequest ...
-func (api *OpenWeatherAPI) MakeForecastRequest() ([]services.MetaForecast, error) <span class="cov8" title="1">{
-        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s&amp;units=metric", api.baseURL, api.forecastEndpoint, api.appID)
-        resp, err := http.Get(url)
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-        <span class="cov8" title="1">defer resp.Body.Close()
-
-        bytes, _ := ioutil.ReadAll(resp.Body)
-
-        var forecast ForecastResponse
-        json.Unmarshal(bytes, &amp;forecast)
-
-        meta := parseForecastResponse(&amp;forecast)
-        return meta, nil</span>
-}
-
-// MakeOpenWeatherAPI ...
-func MakeOpenWeatherAPI() *OpenWeatherAPI <span class="cov8" title="1">{
-        config.Init("development")
-        c := config.GetConfig()
-
-        api := new(OpenWeatherAPI)
-
-        api.appID = c.GetString("openWeather.appId")
-        api.baseURL = c.GetString("openWeather.baseUrl")
-        api.forecastEndpoint = c.GetString("openWeather.forecastEndpoint")
-
-        return api
-}</span>
-</pre>
-		
-		<pre class="file" id="file1" style="display: none">package services
-
-import (
-        "fmt"
-        // "github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi"
+        "github.com/pkg/errors"
 )
 
 // WeatherAPI ...
@@ -250,6 +123,12 @@ type TempData struct {
         TempMax   float64 `json:"temp_max"`
 }
 
+// StatsData ...
+type StatsData struct {
+        Timestamp uint    `json:"timestamp"`
+        Value     float64 `json:"value"`
+}
+
 // MakeWeatherService ...
 func MakeWeatherService(weatherAPI WeatherAPI) *WeatherService <span class="cov8" title="1">{
         s := new(WeatherService)
@@ -264,8 +143,6 @@ func (m MetaForecast) ToTempData() TempData <span class="cov8" title="1">{
         item.TempMax = m.TempMax
         item.TempMin = m.TempMin
         item.Timestamp = m.Timestamp
-
-        fmt.Printf("%+v\n", m)
         return item
 }</span>
 
@@ -285,6 +162,65 @@ func (w *WeatherService) GetTempSeries() ([]TempData, error) <span class="cov8" 
         }</span>
         <span class="cov8" title="1">return mapped, nil</span>
 }
+
+// GetRainSeries ...
+func (w *WeatherService) GetRainSeries() ([]StatsData, error) <span class="cov0" title="0">{
+        meta, err := w.api.MakeForecastRequest()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var mapped []StatsData
+        for _, item := range meta </span><span class="cov0" title="0">{
+                var entry StatsData
+                entry.Timestamp = item.Timestamp
+                entry.Value = item.Rain
+                mapped = append(mapped, entry)
+        }</span>
+        <span class="cov0" title="0">return mapped, nil</span>
+}
+
+// GetPressureSeries ...
+func (w *WeatherService) GetPressureSeries() ([]StatsData, error) <span class="cov0" title="0">{
+        meta, err := w.api.MakeForecastRequest()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var mapped []StatsData
+        for _, item := range meta </span><span class="cov0" title="0">{
+                var entry StatsData
+                entry.Timestamp = item.Timestamp
+                entry.Value = float64(item.Pressure)
+                mapped = append(mapped, entry)
+        }</span>
+        <span class="cov0" title="0">return mapped, nil</span>
+}
+
+// GetHumiditySeries ...
+func (w *WeatherService) GetHumiditySeries() ([]StatsData, error) <span class="cov0" title="0">{
+        meta, err := w.api.MakeForecastRequest()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var mapped []StatsData
+        for _, item := range meta </span><span class="cov0" title="0">{
+                var entry StatsData
+                entry.Timestamp = item.Timestamp
+                entry.Value = float64(item.Humidity)
+                mapped = append(mapped, entry)
+        }</span>
+        <span class="cov0" title="0">return mapped, nil</span>
+}
+
+// GetForecast returns full forecast for given day
+func (w *WeatherService) GetForecast(date time.Time) (*MetaForecast, error) <span class="cov0" title="0">{
+        return nil, errors.New("not implemented")
+}</span>
 </pre>
 		
 		</div>

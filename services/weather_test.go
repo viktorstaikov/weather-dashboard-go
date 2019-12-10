@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -56,6 +58,10 @@ func (f *MockAPI) MakeForecastRequest() ([]MetaForecast, error) {
 		},
 	}
 	return mf, nil
+}
+
+func (f *MockAPI) GetForecast(d *time.Time) (*MetaForecast, error) {
+	return nil, errors.New("not yet implemented")
 }
 
 func TestMakeWeatherService(t *testing.T) {

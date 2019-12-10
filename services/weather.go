@@ -1,10 +1,13 @@
 package services
 
-// "github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi"
+import (
+	"time"
+)
 
 // WeatherAPI ...
 type WeatherAPI interface {
 	MakeForecastRequest() ([]MetaForecast, error)
+	GetForecast(*time.Time) (*MetaForecast, error)
 }
 
 // WeatherService ...
@@ -49,6 +52,12 @@ type TempData struct {
 	TempMax   float64 `json:"temp_max"`
 }
 
+// StatsData ...
+type StatsData struct {
+	Timestamp uint    `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
+
 // MakeWeatherService ...
 func MakeWeatherService(weatherAPI WeatherAPI) *WeatherService {
 	s := new(WeatherService)
@@ -81,4 +90,68 @@ func (w *WeatherService) GetTempSeries() ([]TempData, error) {
 		mapped = append(mapped, entry)
 	}
 	return mapped, nil
+}
+
+// GetRainSeries ...
+func (w *WeatherService) GetRainSeries() ([]StatsData, error) {
+	meta, err := w.api.MakeForecastRequest()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var mapped []StatsData
+	for _, item := range meta {
+		var entry StatsData
+		entry.Timestamp = item.Timestamp
+		entry.Value = item.Rain
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
+}
+
+// GetPressureSeries ...
+func (w *WeatherService) GetPressureSeries() ([]StatsData, error) {
+	meta, err := w.api.MakeForecastRequest()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var mapped []StatsData
+	for _, item := range meta {
+		var entry StatsData
+		entry.Timestamp = item.Timestamp
+		entry.Value = float64(item.Pressure)
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
+}
+
+// GetHumiditySeries ...
+func (w *WeatherService) GetHumiditySeries() ([]StatsData, error) {
+	meta, err := w.api.MakeForecastRequest()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var mapped []StatsData
+	for _, item := range meta {
+		var entry StatsData
+		entry.Timestamp = item.Timestamp
+		entry.Value = float64(item.Humidity)
+		mapped = append(mapped, entry)
+	}
+	return mapped, nil
+}
+
+// GetForecast returns full forecast for given day
+func (w *WeatherService) GetForecast(date *time.Time) (*MetaForecast, error) {
+	// return nil, errors.New("not implemented")
+	forecast, err := w.api.GetForecast(date)
+	if err != nil {
+		return nil, err
+	}
+	return forecast, nil
 }
