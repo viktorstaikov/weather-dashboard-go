@@ -67,52 +67,6 @@ type UVResponse struct {
 	Value     float64 `json:"value"`
 }
 
-// parseForecastResponse ...
-func parseForecastResponse(r *ForecastResponse) []services.MetaForecast {
-	var list []services.MetaForecast
-	for _, item := range r.List {
-		var metaItem services.MetaForecast
-		metaItem.Timestamp = item.Dt * 1000
-		metaItem.Temp = item.Main.Temp
-		metaItem.TempMin = item.Main.TempMin
-		metaItem.TempMax = item.Main.TempMax
-		metaItem.Pressure = item.Main.Pressure
-		metaItem.Humidity = item.Main.Humidity
-		metaItem.Weather = item.Weather[0]
-		metaItem.Wind = item.Wind
-
-		metaItem.Clouds = 0
-		if item.Clouds.All >= 0 {
-			metaItem.Clouds = item.Clouds.All
-		}
-
-		metaItem.Rain = 0
-		if item.Rain.ThreeH >= 0 {
-			metaItem.Rain = item.Rain.ThreeH
-		}
-
-		metaItem.Snow = 0
-		if item.Snow.ThreeH >= 0 {
-			metaItem.Snow = item.Snow.ThreeH
-		}
-
-		list = append(list, metaItem)
-	}
-	return list
-}
-
-func parseUVResponse(r []UVResponse) []services.MetaForecast {
-	var list []services.MetaForecast
-	for _, respItem := range r {
-		var f services.MetaForecast
-		f.UVIndex = respItem.Value
-		f.Timestamp = respItem.Timestamp * 1000
-
-		list = append(list, f)
-	}
-	return list
-}
-
 // MakeOpenWeatherAPI init
 func MakeOpenWeatherAPI() *OpenWeatherAPI {
 	config.Init("development")
@@ -260,7 +214,7 @@ func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error
 
 func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) {
 
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.uvEndpoint, api.appID)
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvEndpoint, api.appID)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -274,6 +228,51 @@ func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error)
 
 	meta := parseUVResponse(forecast)
 	return meta, nil
+}
+
+func parseForecastResponse(r *ForecastResponse) []services.MetaForecast {
+	var list []services.MetaForecast
+	for _, item := range r.List {
+		var metaItem services.MetaForecast
+		metaItem.Timestamp = item.Dt * 1000
+		metaItem.Temp = item.Main.Temp
+		metaItem.TempMin = item.Main.TempMin
+		metaItem.TempMax = item.Main.TempMax
+		metaItem.Pressure = item.Main.Pressure
+		metaItem.Humidity = item.Main.Humidity
+		metaItem.Weather = item.Weather[0]
+		metaItem.Wind = item.Wind
+
+		metaItem.Clouds = 0
+		if item.Clouds.All >= 0 {
+			metaItem.Clouds = item.Clouds.All
+		}
+
+		metaItem.Rain = 0
+		if item.Rain.ThreeH >= 0 {
+			metaItem.Rain = item.Rain.ThreeH
+		}
+
+		metaItem.Snow = 0
+		if item.Snow.ThreeH >= 0 {
+			metaItem.Snow = item.Snow.ThreeH
+		}
+
+		list = append(list, metaItem)
+	}
+	return list
+}
+
+func parseUVResponse(r []UVResponse) []services.MetaForecast {
+	var list []services.MetaForecast
+	for _, respItem := range r {
+		var f services.MetaForecast
+		f.UVIndex = respItem.Value
+		f.Timestamp = respItem.Timestamp * 1000
+
+		list = append(list, f)
+	}
+	return list
 }
 
 func averageForecast(arr []services.MetaForecast) *services.MetaForecast {
@@ -335,7 +334,6 @@ func filterSameDate(arr []services.MetaForecast, date *time.Time) []services.Met
 	var result []services.MetaForecast
 	for _, item := range arr {
 		d := time.Unix(int64(item.Timestamp/1000), 0)
-		fmt.Println(d, date)
 		if sameDate(&d, date) {
 			result = append(result, item)
 		}

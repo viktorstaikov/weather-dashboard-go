@@ -54,7 +54,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (16.3%)</option>
+				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (59.7%)</option>
 				
 				<option value="file1">github.com/viktorstaikov/weather-dashboard-go/services/weather.go (100.0%)</option>
 				
@@ -139,54 +139,8 @@ type UVResponse struct {
         Value     float64 `json:"value"`
 }
 
-// parseForecastResponse ...
-func parseForecastResponse(r *ForecastResponse) []services.MetaForecast <span class="cov8" title="1">{
-        var list []services.MetaForecast
-        for _, item := range r.List </span><span class="cov8" title="1">{
-                var metaItem services.MetaForecast
-                metaItem.Timestamp = item.Dt * 1000
-                metaItem.Temp = item.Main.Temp
-                metaItem.TempMin = item.Main.TempMin
-                metaItem.TempMax = item.Main.TempMax
-                metaItem.Pressure = item.Main.Pressure
-                metaItem.Humidity = item.Main.Humidity
-                metaItem.Weather = item.Weather[0]
-                metaItem.Wind = item.Wind
-
-                metaItem.Clouds = 0
-                if item.Clouds.All &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Clouds = item.Clouds.All
-                }</span>
-
-                <span class="cov8" title="1">metaItem.Rain = 0
-                if item.Rain.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Rain = item.Rain.ThreeH
-                }</span>
-
-                <span class="cov8" title="1">metaItem.Snow = 0
-                if item.Snow.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
-                        metaItem.Snow = item.Snow.ThreeH
-                }</span>
-
-                <span class="cov8" title="1">list = append(list, metaItem)</span>
-        }
-        <span class="cov8" title="1">return list</span>
-}
-
-func parseUVResponse(r []UVResponse) []services.MetaForecast <span class="cov0" title="0">{
-        var list []services.MetaForecast
-        for _, respItem := range r </span><span class="cov0" title="0">{
-                var f services.MetaForecast
-                f.UVIndex = respItem.Value
-                f.Timestamp = respItem.Timestamp * 1000
-
-                list = append(list, f)
-        }</span>
-        <span class="cov0" title="0">return list</span>
-}
-
 // MakeOpenWeatherAPI init
-func MakeOpenWeatherAPI() *OpenWeatherAPI <span class="cov0" title="0">{
+func MakeOpenWeatherAPI() *OpenWeatherAPI <span class="cov8" title="1">{
         config.Init("development")
         c := config.GetConfig()
 
@@ -313,13 +267,13 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
         return res, nil</span>
 }
 
-func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error) <span class="cov0" title="0">{
+func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error) <span class="cov8" title="1">{
         url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s&amp;units=metric", api.baseURL, api.forecastEndpoint, api.appID)
         resp, err := http.Get(url)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">defer resp.Body.Close()
+        <span class="cov8" title="1">defer resp.Body.Close()
 
         bytes, _ := ioutil.ReadAll(resp.Body)
 
@@ -330,14 +284,14 @@ func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error
         return meta, nil</span>
 }
 
-func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) <span class="cov0" title="0">{
+func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) <span class="cov8" title="1">{
 
-        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s&amp;units=metric", api.baseURL, api.uvEndpoint, api.appID)
+        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s", api.baseURL, api.uvEndpoint, api.appID)
         resp, err := http.Get(url)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">defer resp.Body.Close()
+        <span class="cov8" title="1">defer resp.Body.Close()
 
         bytes, _ := ioutil.ReadAll(resp.Body)
 
@@ -348,7 +302,52 @@ func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error)
         return meta, nil</span>
 }
 
-func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span class="cov0" title="0">{
+func parseForecastResponse(r *ForecastResponse) []services.MetaForecast <span class="cov8" title="1">{
+        var list []services.MetaForecast
+        for _, item := range r.List </span><span class="cov8" title="1">{
+                var metaItem services.MetaForecast
+                metaItem.Timestamp = item.Dt * 1000
+                metaItem.Temp = item.Main.Temp
+                metaItem.TempMin = item.Main.TempMin
+                metaItem.TempMax = item.Main.TempMax
+                metaItem.Pressure = item.Main.Pressure
+                metaItem.Humidity = item.Main.Humidity
+                metaItem.Weather = item.Weather[0]
+                metaItem.Wind = item.Wind
+
+                metaItem.Clouds = 0
+                if item.Clouds.All &gt;= 0 </span><span class="cov8" title="1">{
+                        metaItem.Clouds = item.Clouds.All
+                }</span>
+
+                <span class="cov8" title="1">metaItem.Rain = 0
+                if item.Rain.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
+                        metaItem.Rain = item.Rain.ThreeH
+                }</span>
+
+                <span class="cov8" title="1">metaItem.Snow = 0
+                if item.Snow.ThreeH &gt;= 0 </span><span class="cov8" title="1">{
+                        metaItem.Snow = item.Snow.ThreeH
+                }</span>
+
+                <span class="cov8" title="1">list = append(list, metaItem)</span>
+        }
+        <span class="cov8" title="1">return list</span>
+}
+
+func parseUVResponse(r []UVResponse) []services.MetaForecast <span class="cov8" title="1">{
+        var list []services.MetaForecast
+        for _, respItem := range r </span><span class="cov8" title="1">{
+                var f services.MetaForecast
+                f.UVIndex = respItem.Value
+                f.Timestamp = respItem.Timestamp * 1000
+
+                list = append(list, f)
+        }</span>
+        <span class="cov8" title="1">return list</span>
+}
+
+func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span class="cov8" title="1">{
         count := len(arr)
 
         total := &amp;services.MetaForecast{
@@ -369,7 +368,7 @@ func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span c
                 UVIndex: 0,
         }
 
-        for _, item := range arr </span><span class="cov0" title="0">{
+        for _, item := range arr </span><span class="cov8" title="1">{
                 total.Temp += item.Temp
                 total.TempMin += item.TempMin
                 total.TempMax += item.TempMax
@@ -383,7 +382,7 @@ func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span c
                 total.UVIndex += item.UVIndex
         }</span>
 
-        <span class="cov0" title="0">average := &amp;services.MetaForecast{
+        <span class="cov8" title="1">average := &amp;services.MetaForecast{
                 Timestamp: total.Timestamp,
                 Temp:      total.Temp / float64(count),
                 TempMin:   total.TempMin / float64(count),
@@ -403,19 +402,18 @@ func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span c
         return average</span>
 }
 
-func filterSameDate(arr []services.MetaForecast, date *time.Time) []services.MetaForecast <span class="cov0" title="0">{
+func filterSameDate(arr []services.MetaForecast, date *time.Time) []services.MetaForecast <span class="cov8" title="1">{
         var result []services.MetaForecast
-        for _, item := range arr </span><span class="cov0" title="0">{
+        for _, item := range arr </span><span class="cov8" title="1">{
                 d := time.Unix(int64(item.Timestamp/1000), 0)
-                fmt.Println(d, date)
-                if sameDate(&amp;d, date) </span><span class="cov0" title="0">{
+                if sameDate(&amp;d, date) </span><span class="cov8" title="1">{
                         result = append(result, item)
                 }</span>
         }
-        <span class="cov0" title="0">return result</span>
+        <span class="cov8" title="1">return result</span>
 }
 
-func sameDate(date1, date2 *time.Time) bool <span class="cov0" title="0">{
+func sameDate(date1, date2 *time.Time) bool <span class="cov8" title="1">{
         y1, m1, d1 := date1.Date()
         y2, m2, d2 := date2.Date()
         return y1 == y2 &amp;&amp; m1 == m2 &amp;&amp; d1 == d2
