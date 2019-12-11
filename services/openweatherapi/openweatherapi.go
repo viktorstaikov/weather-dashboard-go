@@ -169,7 +169,7 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
 
 	filteredUVData := filterSameDate(uvData, date)
 	if len(filteredUVData) == 0 {
-		return nil, errors.New(fmt.Sprintf(`no un data for date %s`, date))
+		return nil, errors.New(fmt.Sprintf(`no UV data for date %s`, date))
 	}
 
 	avgData := averageForecast(filteredData)
