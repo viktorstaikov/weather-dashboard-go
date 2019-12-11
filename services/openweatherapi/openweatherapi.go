@@ -19,6 +19,9 @@ type OpenWeatherAPI struct {
 	baseURL          string
 	forecastEndpoint string
 	uvEndpoint       string
+
+	forecastURL string
+	uvIndexURL  string
 }
 
 // ForecastResponse ...
@@ -79,12 +82,15 @@ func MakeOpenWeatherAPI() *OpenWeatherAPI {
 	api.forecastEndpoint = c.GetString("openWeather.forecastEndpoint")
 	api.uvEndpoint = c.GetString("openWeather.uvEndpoint")
 
+	api.uvIndexURL = fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvEndpoint, api.appID)
+	api.forecastURL = fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.forecastEndpoint, api.appID)
+
 	return api
 }
 
 // GetTempSeries from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetTempSeries() ([]services.TempData, error) {
-	meta, err := api.makeForecastRequest()
+	meta, err := makeForecastRequest(api.forecastURL)
 
 	if err != nil {
 		return nil, err
@@ -100,7 +106,7 @@ func (api *OpenWeatherAPI) GetTempSeries() ([]services.TempData, error) {
 
 // GetRainSeries from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetRainSeries() ([]services.StatsData, error) {
-	meta, err := api.makeForecastRequest()
+	meta, err := makeForecastRequest(api.forecastURL)
 
 	if err != nil {
 		return nil, err
@@ -118,7 +124,7 @@ func (api *OpenWeatherAPI) GetRainSeries() ([]services.StatsData, error) {
 
 // GetPressureSeries from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetPressureSeries() ([]services.StatsData, error) {
-	meta, err := api.makeForecastRequest()
+	meta, err := makeForecastRequest(api.forecastURL)
 
 	if err != nil {
 		return nil, err
@@ -136,7 +142,7 @@ func (api *OpenWeatherAPI) GetPressureSeries() ([]services.StatsData, error) {
 
 // GetHumiditySeries from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetHumiditySeries() ([]services.StatsData, error) {
-	meta, err := api.makeForecastRequest()
+	meta, err := makeForecastRequest(api.forecastURL)
 
 	if err != nil {
 		return nil, err
@@ -155,12 +161,12 @@ func (api *OpenWeatherAPI) GetHumiditySeries() ([]services.StatsData, error) {
 
 // GetForecast from OpenWeatherAPI
 func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast, error) {
-	data, err := api.makeForecastRequest()
+	data, err := makeForecastRequest(api.forecastURL)
 	if err != nil {
 		return nil, err
 	}
 
-	uvData, uvErr := api.makeUVIndexRequest()
+	uvData, uvErr := makeUVIndexRequest(api.uvIndexURL)
 	if uvErr != nil {
 		return nil, err
 	}
@@ -195,8 +201,7 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
 	return res, nil
 }
 
-func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error) {
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s&units=metric", api.baseURL, api.forecastEndpoint, api.appID)
+func makeForecastRequest(url string) ([]services.MetaForecast, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -212,9 +217,7 @@ func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error
 	return meta, nil
 }
 
-func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) {
-
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvEndpoint, api.appID)
+func makeUVIndexRequest(url string) ([]services.MetaForecast, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

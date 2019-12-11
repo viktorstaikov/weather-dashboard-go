@@ -13,6 +13,22 @@ import (
 	"github.com/viktorstaikov/weather-dashboard-go/services"
 )
 
+func TestGetTempSeries(t *testing.T) {
+	assert.Fail(t, "not implemented")
+}
+func TestGetRainSeries(t *testing.T) {
+	assert.Fail(t, "not implemented")
+}
+func TestGetPressureSeries(t *testing.T) {
+	assert.Fail(t, "not implemented")
+}
+func TestGetHumiditySeries(t *testing.T) {
+	assert.Fail(t, "not implemented")
+}
+func TestGetForecast(t *testing.T) {
+	assert.Fail(t, "not implemented")
+}
+
 func TestMakeForecastRequest(t *testing.T) {
 	config.Init("development")
 	c := config.GetConfig()
@@ -47,7 +63,7 @@ func TestMakeForecastRequest(t *testing.T) {
 
 	api := MakeOpenWeatherAPI()
 
-	_, err := api.makeForecastRequest()
+	_, err := makeForecastRequest(api.forecastURL)
 	if err != nil {
 		t.Errorf("makeForecastRequest() returned an error: %s", err)
 	}
@@ -84,7 +100,7 @@ func TestMakeUVIndexRequest(t *testing.T) {
 
 	api := MakeOpenWeatherAPI()
 
-	_, err := api.makeUVIndexRequest()
+	_, err := makeUVIndexRequest(api.uvIndexURL)
 	if err != nil {
 		t.Errorf("makeUVIndexRequest() returned an error: %s", err)
 	}
