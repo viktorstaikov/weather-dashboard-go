@@ -15,10 +15,11 @@ import (
 
 // OpenWeatherAPI ...
 type OpenWeatherAPI struct {
-	appID            string
-	baseURL          string
-	forecastEndpoint string
-	uvEndpoint       string
+	appID              string
+	baseURL            string
+	forecastEndpoint   string
+	uvForecastEndpoint string
+	uvCurrentEndpoint  string
 }
 
 // ForecastResponse ...
@@ -74,7 +75,8 @@ func MakeOpenWeatherAPI(c *viper.Viper) *OpenWeatherAPI {
 	api.appID = c.GetString("openWeather.appId")
 	api.baseURL = c.GetString("openWeather.baseUrl")
 	api.forecastEndpoint = c.GetString("openWeather.forecastEndpoint")
-	api.uvEndpoint = c.GetString("openWeather.uvEndpoint")
+	api.uvForecastEndpoint = c.GetString("openWeather.uvForecastEndpoint")
+	api.uvCurrentEndpoint = c.GetString("openWeather.uvCurrentEndpoint")
 
 	return api
 }
@@ -157,23 +159,35 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
 		return nil, err
 	}
 
-	uvData, uvErr := api.makeUVIndexRequest()
-	if uvErr != nil {
-		return nil, err
-	}
-
 	filteredData := filterSameDate(data, date)
 	if len(filteredData) == 0 {
 		return nil, errors.New(fmt.Sprintf(`no data for date %s`, date))
 	}
 
-	filteredUVData := filterSameDate(uvData, date)
-	if len(filteredUVData) == 0 {
-		return nil, errors.New(fmt.Sprintf(`no UV data for date %s`, date))
+	today := time.Now()
+	var avgUvData *services.MetaForecast
+
+	if sameDate(&today, date) {
+		var uvErr error
+		avgUvData, uvErr = api.makeUvIndexCurrentRequest()
+		if uvErr != nil {
+			return nil, err
+		}
+
+	} else {
+		uvData, uvErr := api.makeUVIndexForecastRequest()
+		if uvErr != nil {
+			return nil, err
+		}
+
+		filteredUVData := filterSameDate(uvData, date)
+		if len(filteredUVData) == 0 {
+			return nil, errors.New(fmt.Sprintf(`no UV data for date %s`, date))
+		}
+		avgUvData = averageForecast(filteredUVData)
 	}
 
 	avgData := averageForecast(filteredData)
-	avgUvData := averageForecast(filteredUVData)
 
 	res := &services.MetaForecast{
 		Timestamp: avgUvData.Timestamp,
@@ -209,8 +223,8 @@ func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error
 	return meta, nil
 }
 
-func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) {
-	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvEndpoint, api.appID)
+func (api *OpenWeatherAPI) makeUVIndexForecastRequest() ([]services.MetaForecast, error) {
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvForecastEndpoint, api.appID)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -222,8 +236,32 @@ func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error)
 	var forecast []UVResponse
 	json.Unmarshal(bytes, &forecast)
 
-	meta := parseUVResponse(forecast)
-	return meta, nil
+	var list []services.MetaForecast
+	for _, respItem := range forecast {
+		f := parseUVResponse(&respItem)
+
+		list = append(list, f)
+	}
+	return list, nil
+}
+
+func (api *OpenWeatherAPI) makeUvIndexCurrentRequest() (*services.MetaForecast, error) {
+	url := fmt.Sprintf("%s%s?lat=42.6979&lon=23.3222&appid=%s", api.baseURL, api.uvCurrentEndpoint, api.appID)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bytes, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(string(bytes))
+
+	var uvResp UVResponse
+	json.Unmarshal(bytes, &uvResp)
+
+	meta := parseUVResponse(&uvResp)
+	return &meta, nil
 }
 
 func parseForecastResponse(r *ForecastResponse) []services.MetaForecast {
@@ -259,16 +297,11 @@ func parseForecastResponse(r *ForecastResponse) []services.MetaForecast {
 	return list
 }
 
-func parseUVResponse(r []UVResponse) []services.MetaForecast {
-	var list []services.MetaForecast
-	for _, respItem := range r {
-		var f services.MetaForecast
-		f.UVIndex = respItem.Value
-		f.Timestamp = respItem.Timestamp * 1000
-
-		list = append(list, f)
-	}
-	return list
+func parseUVResponse(r *UVResponse) services.MetaForecast {
+	var f services.MetaForecast
+	f.UVIndex = r.Value
+	f.Timestamp = r.Timestamp * 1000
+	return f
 }
 
 func averageForecast(arr []services.MetaForecast) *services.MetaForecast {

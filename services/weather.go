@@ -46,7 +46,7 @@ type MetaForecast struct {
 	Wind      WindCondition    `json:"wind"`
 	Rain      float64          `json:"rain"`
 	Snow      float64          `json:"snow"`
-	UVIndex   float64          `json:"uvindex"`
+	UVIndex   float64          `json:"uvIndex"`
 }
 
 // TempData represents temperature forecast at given time

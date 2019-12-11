@@ -54,7 +54,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (93.9%)</option>
+				<option value="file0">github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi/openweatherapi.go (93.3%)</option>
 				
 				<option value="file1">github.com/viktorstaikov/weather-dashboard-go/services/weather.go (100.0%)</option>
 				
@@ -87,10 +87,11 @@ import (
 
 // OpenWeatherAPI ...
 type OpenWeatherAPI struct {
-        appID            string
-        baseURL          string
-        forecastEndpoint string
-        uvEndpoint       string
+        appID              string
+        baseURL            string
+        forecastEndpoint   string
+        uvForecastEndpoint string
+        uvCurrentEndpoint  string
 }
 
 // ForecastResponse ...
@@ -146,7 +147,8 @@ func MakeOpenWeatherAPI(c *viper.Viper) *OpenWeatherAPI <span class="cov8" title
         api.appID = c.GetString("openWeather.appId")
         api.baseURL = c.GetString("openWeather.baseUrl")
         api.forecastEndpoint = c.GetString("openWeather.forecastEndpoint")
-        api.uvEndpoint = c.GetString("openWeather.uvEndpoint")
+        api.uvForecastEndpoint = c.GetString("openWeather.uvForecastEndpoint")
+        api.uvCurrentEndpoint = c.GetString("openWeather.uvCurrentEndpoint")
 
         return api
 }</span>
@@ -229,23 +231,35 @@ func (api *OpenWeatherAPI) GetForecast(date *time.Time) (*services.MetaForecast,
                 return nil, err
         }</span>
 
-        <span class="cov8" title="1">uvData, uvErr := api.makeUVIndexRequest()
-        if uvErr != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-
         <span class="cov8" title="1">filteredData := filterSameDate(data, date)
         if len(filteredData) == 0 </span><span class="cov8" title="1">{
                 return nil, errors.New(fmt.Sprintf(`no data for date %s`, date))
         }</span>
 
-        <span class="cov8" title="1">filteredUVData := filterSameDate(uvData, date)
-        if len(filteredUVData) == 0 </span><span class="cov8" title="1">{
-                return nil, errors.New(fmt.Sprintf(`no un data for date %s`, date))
-        }</span>
+        <span class="cov8" title="1">today := time.Now()
+        var avgUvData *services.MetaForecast
+
+        if sameDate(&amp;today, date) </span><span class="cov8" title="1">{
+                var uvErr error
+                avgUvData, uvErr = api.makeUvIndexCurrentRequest()
+                if uvErr != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+        } else<span class="cov8" title="1"> {
+                uvData, uvErr := api.makeUVIndexForecastRequest()
+                if uvErr != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">filteredUVData := filterSameDate(uvData, date)
+                if len(filteredUVData) == 0 </span><span class="cov8" title="1">{
+                        return nil, errors.New(fmt.Sprintf(`no UV data for date %s`, date))
+                }</span>
+                <span class="cov8" title="1">avgUvData = averageForecast(filteredUVData)</span>
+        }
 
         <span class="cov8" title="1">avgData := averageForecast(filteredData)
-        avgUvData := averageForecast(filteredUVData)
 
         res := &amp;services.MetaForecast{
                 Timestamp: avgUvData.Timestamp,
@@ -281,8 +295,8 @@ func (api *OpenWeatherAPI) makeForecastRequest() ([]services.MetaForecast, error
         return meta, nil</span>
 }
 
-func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error) <span class="cov8" title="1">{
-        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s", api.baseURL, api.uvEndpoint, api.appID)
+func (api *OpenWeatherAPI) makeUVIndexForecastRequest() ([]services.MetaForecast, error) <span class="cov8" title="1">{
+        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s", api.baseURL, api.uvForecastEndpoint, api.appID)
         resp, err := http.Get(url)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
@@ -294,8 +308,30 @@ func (api *OpenWeatherAPI) makeUVIndexRequest() ([]services.MetaForecast, error)
         var forecast []UVResponse
         json.Unmarshal(bytes, &amp;forecast)
 
-        meta := parseUVResponse(forecast)
-        return meta, nil</span>
+        var list []services.MetaForecast
+        for _, respItem := range forecast </span><span class="cov8" title="1">{
+                f := parseUVResponse(&amp;respItem)
+
+                list = append(list, f)
+        }</span>
+        <span class="cov8" title="1">return list, nil</span>
+}
+
+func (api *OpenWeatherAPI) makeUvIndexCurrentRequest() (*services.MetaForecast, error) <span class="cov8" title="1">{
+        url := fmt.Sprintf("%s%s?lat=42.6979&amp;lon=23.3222&amp;appid=%s", api.baseURL, api.uvCurrentEndpoint, api.appID)
+        resp, err := http.Get(url)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        bytes, _ := ioutil.ReadAll(resp.Body)
+
+        var forecast UVResponse
+        json.Unmarshal(bytes, &amp;forecast)
+
+        meta := parseUVResponse(&amp;forecast)
+        return &amp;meta, nil</span>
 }
 
 func parseForecastResponse(r *ForecastResponse) []services.MetaForecast <span class="cov8" title="1">{
@@ -331,17 +367,12 @@ func parseForecastResponse(r *ForecastResponse) []services.MetaForecast <span cl
         <span class="cov8" title="1">return list</span>
 }
 
-func parseUVResponse(r []UVResponse) []services.MetaForecast <span class="cov8" title="1">{
-        var list []services.MetaForecast
-        for _, respItem := range r </span><span class="cov8" title="1">{
-                var f services.MetaForecast
-                f.UVIndex = respItem.Value
-                f.Timestamp = respItem.Timestamp * 1000
-
-                list = append(list, f)
-        }</span>
-        <span class="cov8" title="1">return list</span>
-}
+func parseUVResponse(r *UVResponse) services.MetaForecast <span class="cov8" title="1">{
+        var f services.MetaForecast
+        f.UVIndex = r.Value
+        f.Timestamp = r.Timestamp * 1000
+        return f
+}</span>
 
 func averageForecast(arr []services.MetaForecast) *services.MetaForecast <span class="cov8" title="1">{
         count := len(arr)
