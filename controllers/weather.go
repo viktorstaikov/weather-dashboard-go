@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/viktorstaikov/weather-dashboard-go/config"
 	"github.com/viktorstaikov/weather-dashboard-go/services"
 	"github.com/viktorstaikov/weather-dashboard-go/services/openweatherapi"
 )
@@ -20,7 +21,9 @@ var ws *services.WeatherService
 func MakeWeatherController() *WeatherController {
 	c := new(WeatherController)
 
-	api := openweatherapi.MakeOpenWeatherAPI()
+	config.Init("development")
+	cnfg := config.GetConfig()
+	api := openweatherapi.MakeOpenWeatherAPI(cnfg)
 	c.weatherService = services.MakeWeatherService(api)
 
 	return c

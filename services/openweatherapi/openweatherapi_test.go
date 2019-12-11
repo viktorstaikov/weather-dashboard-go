@@ -14,16 +14,76 @@ import (
 )
 
 func TestGetTempSeries(t *testing.T) {
-	assert.Fail(t, "not implemented")
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonString := `{"list":[{"dt":1575579600,"main":{"temp":-1,"temp_min":-3,"temp_max":0,"pressure":1031,"sea_level":1031,"grnd_level":913,"humidity":89,"temp_kf":1.58},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.39,"deg":233},"rain":{"3h":0},"snow":{"3h":0},"sys":{"pod":"n"},"dt_txt":"2019-12-05 21:00:00"},{"dt":1575590400,"main":{"temp":3,"temp_min":1,"temp_max":5,"pressure":1030,"sea_level":1030,"grnd_level":913,"humidity":89,"temp_kf":1.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.07,"deg":234},"rain":{"3h":20},"snow":{"3h":10},"sys":{"pod":"n"},"dt_txt":"2019-12-06 00:00:00"}]}`
+
+		w.Write([]byte(jsonString))
+	}))
+	defer ts.Close()
+
+	config.Init("development")
+	c := config.GetConfig()
+	c.Set("openWeather.baseUrl", ts.URL)
+
+	api := MakeOpenWeatherAPI(c)
+
+	data, err := api.GetTempSeries()
+	assert.Nil(t, err)
+	assert.Len(t, data, 2)
 }
 func TestGetRainSeries(t *testing.T) {
-	assert.Fail(t, "not implemented")
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonString := `{"list":[{"dt":1575579600,"main":{"temp":-1,"temp_min":-3,"temp_max":0,"pressure":1031,"sea_level":1031,"grnd_level":913,"humidity":89,"temp_kf":1.58},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.39,"deg":233},"rain":{"3h":0},"snow":{"3h":0},"sys":{"pod":"n"},"dt_txt":"2019-12-05 21:00:00"},{"dt":1575590400,"main":{"temp":3,"temp_min":1,"temp_max":5,"pressure":1030,"sea_level":1030,"grnd_level":913,"humidity":89,"temp_kf":1.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.07,"deg":234},"rain":{"3h":20},"snow":{"3h":10},"sys":{"pod":"n"},"dt_txt":"2019-12-06 00:00:00"}]}`
+
+		w.Write([]byte(jsonString))
+	}))
+	defer ts.Close()
+
+	config.Init("development")
+	c := config.GetConfig()
+	c.Set("openWeather.baseUrl", ts.URL)
+
+	api := MakeOpenWeatherAPI(c)
+
+	data, err := api.GetRainSeries()
+	assert.Nil(t, err)
+	assert.Len(t, data, 2)
 }
 func TestGetPressureSeries(t *testing.T) {
-	assert.Fail(t, "not implemented")
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonString := `{"list":[{"dt":1575579600,"main":{"temp":-1,"temp_min":-3,"temp_max":0,"pressure":1031,"sea_level":1031,"grnd_level":913,"humidity":89,"temp_kf":1.58},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.39,"deg":233},"rain":{"3h":0},"snow":{"3h":0},"sys":{"pod":"n"},"dt_txt":"2019-12-05 21:00:00"},{"dt":1575590400,"main":{"temp":3,"temp_min":1,"temp_max":5,"pressure":1030,"sea_level":1030,"grnd_level":913,"humidity":89,"temp_kf":1.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.07,"deg":234},"rain":{"3h":20},"snow":{"3h":10},"sys":{"pod":"n"},"dt_txt":"2019-12-06 00:00:00"}]}`
+
+		w.Write([]byte(jsonString))
+	}))
+	defer ts.Close()
+
+	config.Init("development")
+	c := config.GetConfig()
+	c.Set("openWeather.baseUrl", ts.URL)
+
+	api := MakeOpenWeatherAPI(c)
+
+	data, err := api.GetPressureSeries()
+	assert.Nil(t, err)
+	assert.Len(t, data, 2)
 }
 func TestGetHumiditySeries(t *testing.T) {
-	assert.Fail(t, "not implemented")
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonString := `{"list":[{"dt":1575579600,"main":{"temp":-1,"temp_min":-3,"temp_max":0,"pressure":1031,"sea_level":1031,"grnd_level":913,"humidity":89,"temp_kf":1.58},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.39,"deg":233},"rain":{"3h":0},"snow":{"3h":0},"sys":{"pod":"n"},"dt_txt":"2019-12-05 21:00:00"},{"dt":1575590400,"main":{"temp":3,"temp_min":1,"temp_max":5,"pressure":1030,"sea_level":1030,"grnd_level":913,"humidity":89,"temp_kf":1.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":1.07,"deg":234},"rain":{"3h":20},"snow":{"3h":10},"sys":{"pod":"n"},"dt_txt":"2019-12-06 00:00:00"}]}`
+
+		w.Write([]byte(jsonString))
+	}))
+	defer ts.Close()
+
+	config.Init("development")
+	c := config.GetConfig()
+	c.Set("openWeather.baseUrl", ts.URL)
+
+	api := MakeOpenWeatherAPI(c)
+
+	data, err := api.GetHumiditySeries()
+	assert.Nil(t, err)
+	assert.Len(t, data, 2)
 }
 func TestGetForecast(t *testing.T) {
 	assert.Fail(t, "not implemented")
@@ -61,9 +121,9 @@ func TestMakeForecastRequest(t *testing.T) {
 
 	c.Set("openWeather.baseUrl", ts.URL)
 
-	api := MakeOpenWeatherAPI()
+	api := MakeOpenWeatherAPI(c)
 
-	_, err := makeForecastRequest(api.forecastURL)
+	_, err := api.makeForecastRequest()
 	if err != nil {
 		t.Errorf("makeForecastRequest() returned an error: %s", err)
 	}
@@ -98,9 +158,9 @@ func TestMakeUVIndexRequest(t *testing.T) {
 
 	c.Set("openWeather.baseUrl", ts.URL)
 
-	api := MakeOpenWeatherAPI()
+	api := MakeOpenWeatherAPI(c)
 
-	_, err := makeUVIndexRequest(api.uvIndexURL)
+	_, err := api.makeUVIndexRequest()
 	if err != nil {
 		t.Errorf("makeUVIndexRequest() returned an error: %s", err)
 	}
